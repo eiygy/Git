@@ -1687,10 +1687,10 @@ int refs_read_raw_ref(struct ref_store *ref_store, const char *refname,
 }
 
 /* This function needs to return a meaningful errno on failure */
-const char *refs_resolve_ref_unsafe(struct ref_store *refs,
-				    const char *refname,
-				    int resolve_flags,
-				    struct object_id *oid, int *flags)
+static const char *
+refs_resolve_ref_unsafe_implicit_errno(struct ref_store *refs,
+				       const char *refname, int resolve_flags,
+				       struct object_id *oid, int *flags)
 {
 	static struct strbuf sb_refname = STRBUF_INIT;
 	struct object_id unused_oid;
@@ -1779,14 +1779,24 @@ const char *refs_resolve_ref_unsafe(struct ref_store *refs,
 	return NULL;
 }
 
+const char *refs_resolve_ref_unsafe(struct ref_store *refs, const char *refname,
+				    int resolve_flags, struct object_id *oid,
+				    int *flags)
+{
+	const char *result = refs_resolve_ref_unsafe_implicit_errno(
+		refs, refname, resolve_flags, oid, flags);
+	errno = 0;
+	return result;
+}
+
 const char *refs_resolve_ref_unsafe_with_errno(struct ref_store *refs,
 					       const char *refname,
 					       int resolve_flags,
 					       struct object_id *oid,
 					       int *flags, int *failure_errno)
 {
-	const char *result = refs_resolve_ref_unsafe(refs, refname,
-						     resolve_flags, oid, flags);
+	const char *result = refs_resolve_ref_unsafe_implicit_errno(
+		refs, refname, resolve_flags, oid, flags);
 	*failure_errno = errno;
 	return result;
 }
