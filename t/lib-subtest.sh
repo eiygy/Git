@@ -43,8 +43,8 @@ write_sub_test_lib_test () {
 }
 
 _run_sub_test_lib_test_common () {
-	neg="$1" name="$2" # stdin is the body of the test code
-	shift 2
+	cmp_op="$1" want_code="$2" name="$3" # stdin is the body of the test code
+	shift 3
 	(
 		cd "$name" &&
 
@@ -58,33 +58,30 @@ _run_sub_test_lib_test_common () {
 		TEST_OUTPUT_DIRECTORY=$(pwd) &&
 		export TEST_OUTPUT_DIRECTORY &&
 		sane_unset GIT_TEST_FAIL_PREREQS &&
-		if test -z "$neg"
-		then
-			./"$name.sh" "$@" >out 2>err
-		else
-			! ./"$name.sh" "$@" >out 2>err
-		fi
+		./"$name.sh" "$@" >out 2>err;
+		ret=$? &&
+		test "$ret" "$cmp_op" "$want_code"
 	)
 }
 
 write_and_run_sub_test_lib_test () {
 	name="$1" descr="$2" # stdin is the body of the test code
 	write_sub_test_lib_test "$@" || return 1
-	_run_sub_test_lib_test_common '' "$@"
+	_run_sub_test_lib_test_common -eq 0 "$@"
 }
 
 write_and_run_sub_test_lib_test_err () {
 	name="$1" descr="$2" # stdin is the body of the test code
 	write_sub_test_lib_test "$@" || return 1
-	_run_sub_test_lib_test_common '!' "$@"
+	_run_sub_test_lib_test_common -eq 1 "$@"
 }
 
 run_sub_test_lib_test () {
-	_run_sub_test_lib_test_common '' "$@"
+	_run_sub_test_lib_test_common -eq 0 "$@"
 }
 
 run_sub_test_lib_test_err () {
-	_run_sub_test_lib_test_common '!' "$@"
+	_run_sub_test_lib_test_common -eq 1 "$@"
 }
 
 _check_sub_test_lib_test_common () {
