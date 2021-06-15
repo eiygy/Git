@@ -541,6 +541,34 @@ Writing Documentation:
  documentation, please see the documentation-related advice in the
  Documentation/SubmittingPatches file).
 
+ In order to ensure the documentation is inclusive, avoid assuming
+ that an unspecified example person is male or female, and think
+ twice before using "he", "him", "she", or "her".  Here are some
+ tips to avoid use of gendered pronouns:
+
+  - Removing the example person might make the sentence more
+    clear and efficient.  Instead of saying "The programmer
+    chooses between X and Y as she sees fit", it is clearer to
+    say "Valid choices are X and Y".
+
+  - If you need to talk about an example person, then try using
+    second-person to allow the reader to be that example.  For
+    example, "If you want X to happen, you'd pass option Y",
+    instead of "If the user wants X to happen, she'd ...").
+    Alternatively, replace the single example with more than one
+    person and use plural "they", such as "Interested readers
+    can read 'git log -p README' to learn the history in their
+    ample spare time" instead of "an interested reader" learning
+    in "his" spare time).
+
+  - If you absolutely need to refer to an example person that is
+    third-person singluar, you may resort to "singular they" (e.g.
+    "A contributor asks their upstream to pull from them").  Note
+    that this sounds ungrammatical and unnatural to those who
+    learned English as a second language in some parts of the
+    world, so should be avoided unless the earlier techniques
+    fail to improve the sentence.
+
  Every user-visible change should be reflected in the documentation.
  The same general rule as for code applies -- imitate the existing
  conventions.
