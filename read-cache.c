@@ -27,6 +27,7 @@
 #include "progress.h"
 #include "sparse-index.h"
 #include "csum-file.h"
+#include "hook.h"
 
 /* Mask for the name length in ce_flags in the on-disk index */
 
