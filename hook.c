@@ -85,7 +85,14 @@ static int pick_next_hook(struct child_process *cp,
 	struct hook_cb_data *hook_cb = pp_cb;
 	struct hook *run_me = hook_cb->run_me;
 
-	cp->no_stdin = 1;
+
+	/* reopen the file for stdin; run_command closes it. */
+	if (hook_cb->options->path_to_stdin) {
+		cp->no_stdin = 0;
+		cp->in = xopen(hook_cb->options->path_to_stdin, O_RDONLY);
+	} else {
+		cp->no_stdin = 1;
+	}
 	cp->env = hook_cb->options->env.v;
 	cp->stdout_to_stderr = 1;
 	cp->trace2_hook_name = hook_cb->hook_name;
