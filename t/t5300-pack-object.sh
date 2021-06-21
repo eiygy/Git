@@ -119,6 +119,24 @@ test_expect_success 'pack-object <stdin parsing: [|--revs] with --stdin' '
 	test_cmp err.expect err.actual
 '
 
+test_expect_success 'pack-object <stdin parsing: --stdin-packs handles garbage' '
+	cat >in <<-EOF &&
+	$(git -C pack-object-stdin rev-parse one)
+	$(git -C pack-object-stdin rev-parse two)
+	EOF
+
+	# We actually just report the first bad line in strcmp()
+	# order, it just so happens that we get the same result under
+	# SHA-1 and SHA-256 here. It does not really matter that we
+	# report the first bad item in this obscure case, so this
+	# oddity of the test is OK.
+	cat >err.expect <<-EOF &&
+	fatal: could not find pack '"'"'$(git -C pack-object-stdin rev-parse two)'"'"'
+	EOF
+	test_must_fail git -C pack-object-stdin pack-objects stdin-with-stdin-option --stdin-packs <in 2>err.actual &&
+	test_cmp err.expect err.actual
+'
+
 # usage: check_deltas <stderr_from_pack_objects> <cmp_op> <nr_deltas>
 # e.g.: check_deltas stderr -gt 0
 check_deltas() {
