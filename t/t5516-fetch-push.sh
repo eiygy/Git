@@ -201,6 +201,7 @@ test_expect_success 'push with negotiation' '
 	# Without negotiation
 	mk_empty testrepo &&
 	git push testrepo $the_first_commit:refs/remotes/origin/first_commit &&
+	test_commit -C testrepo unrelated_commit &&
 	git -C testrepo config receive.hideRefs refs/remotes/origin/first_commit &&
 	echo now pushing without negotiation &&
 	GIT_TRACE2_EVENT="$(pwd)/event" git -c protocol.version=2 push testrepo refs/heads/main:refs/remotes/origin/main &&
@@ -210,6 +211,7 @@ test_expect_success 'push with negotiation' '
 	rm event &&
 	mk_empty testrepo &&
 	git push testrepo $the_first_commit:refs/remotes/origin/first_commit &&
+	test_commit -C testrepo unrelated_commit &&
 	git -C testrepo config receive.hideRefs refs/remotes/origin/first_commit &&
 	GIT_TRACE2_EVENT="$(pwd)/event" git -c protocol.version=2 -c push.negotiate=1 push testrepo refs/heads/main:refs/remotes/origin/main &&
 	grep_wrote 2 event # 1 commit, 1 tree
@@ -219,6 +221,7 @@ test_expect_success 'push with negotiation proceeds anyway even if negotiation f
 	rm event &&
 	mk_empty testrepo &&
 	git push testrepo $the_first_commit:refs/remotes/origin/first_commit &&
+	test_commit -C testrepo unrelated_commit &&
 	git -C testrepo config receive.hideRefs refs/remotes/origin/first_commit &&
 	GIT_TEST_PROTOCOL_VERSION=0 GIT_TRACE2_EVENT="$(pwd)/event" \
 		git -c push.negotiate=1 push testrepo refs/heads/main:refs/remotes/origin/main 2>err &&
@@ -1783,6 +1786,7 @@ test_expect_success 'http push with negotiation' '
 	# Without negotiation
 	test_create_repo "$SERVER" &&
 	test_config -C "$SERVER" http.receivepack true &&
+	test_commit -C "$SERVER" unrelated_commit &&
 	git -C client push "$URI" first_commit:refs/remotes/origin/first_commit &&
 	git -C "$SERVER" config receive.hideRefs refs/remotes/origin/first_commit &&
 	GIT_TRACE2_EVENT="$(pwd)/event" git -C client -c protocol.version=2 \
@@ -1794,6 +1798,7 @@ test_expect_success 'http push with negotiation' '
 	rm -rf "$SERVER" &&
 	test_create_repo "$SERVER" &&
 	test_config -C "$SERVER" http.receivepack true &&
+	test_commit -C "$SERVER" unrelated_commit &&
 	git -C client push "$URI" first_commit:refs/remotes/origin/first_commit &&
 	git -C "$SERVER" config receive.hideRefs refs/remotes/origin/first_commit &&
 	GIT_TRACE2_EVENT="$(pwd)/event" git -C client -c protocol.version=2 -c push.negotiate=1 \
