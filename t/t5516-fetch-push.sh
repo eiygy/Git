@@ -1768,4 +1768,53 @@ test_expect_success 'denyCurrentBranch and worktrees' '
 	test_must_fail git -C cloned push --delete origin new-wt
 '
 
+. "$TEST_DIRECTORY"/lib-httpd.sh
+start_httpd
+
+test_expect_success 'http push with negotiation' '
+	SERVER="$HTTPD_DOCUMENT_ROOT_PATH/server" &&
+	URI="$HTTPD_URL/smart/server" &&
+
+	rm -rf client &&
+	git init client &&
+	test_commit -C client first_commit &&
+	test_commit -C client second_commit &&
+
+	# Without negotiation
+	test_create_repo "$SERVER" &&
+	test_config -C "$SERVER" http.receivepack true &&
+	git -C client push "$URI" first_commit:refs/remotes/origin/first_commit &&
+	git -C "$SERVER" config receive.hideRefs refs/remotes/origin/first_commit &&
+	GIT_TRACE2_EVENT="$(pwd)/event" git -C client -c protocol.version=2 \
+		push "$URI" refs/heads/main:refs/remotes/origin/main &&
+	grep_wrote 6 event && # 2 commits, 2 trees, 2 blobs
+
+	# Same commands, but with negotiation
+	rm event &&
+	rm -rf "$SERVER" &&
+	test_create_repo "$SERVER" &&
+	test_config -C "$SERVER" http.receivepack true &&
+	git -C client push "$URI" first_commit:refs/remotes/origin/first_commit &&
+	git -C "$SERVER" config receive.hideRefs refs/remotes/origin/first_commit &&
+	GIT_TRACE2_EVENT="$(pwd)/event" git -C client -c protocol.version=2 -c push.negotiate=1 \
+		push "$URI" refs/heads/main:refs/remotes/origin/main &&
+	grep_wrote 3 event # 1 commit, 1 tree, 1 blob
+'
+
+test_expect_success 'http push with negotiation proceeds anyway even if negotiation fails' '
+	rm event &&
+	rm -rf "$SERVER" &&
+	test_create_repo "$SERVER" &&
+	test_config -C "$SERVER" http.receivepack true &&
+	git -C client push "$URI" first_commit:refs/remotes/origin/first_commit &&
+	git -C "$SERVER" config receive.hideRefs refs/remotes/origin/first_commit &&
+	GIT_TEST_PROTOCOL_VERSION=0 GIT_TRACE2_EVENT="$(pwd)/event" git -C client -c push.negotiate=1 \
+		push "$URI" refs/heads/main:refs/remotes/origin/main 2>err &&
+	grep_wrote 6 event && # 2 commits, 2 trees, 2 blobs
+	test_i18ngrep "push negotiation failed" err
+'
+
+# DO NOT add non-httpd-specific tests here, because the last part of this
+# test script is only executed when httpd is available and enabled.
+
 test_done
