@@ -111,14 +111,34 @@ static struct protocol_capability capabilities[] = {
 static int call_advertise(struct protocol_capability *command,
 			  struct repository *r, struct strbuf *value)
 {
-	return command->advertise(r, value);
+	int ret;
+	struct strbuf sb = STRBUF_INIT;
+	const char *msg;
+
+	strbuf_addf(&sb, "advertise/%s", command->name);
+	trace2_region_enter("serve", sb.buf, r);
+	ret = command->advertise(r, value);
+	msg = ret ? "advertised" : "hidden";
+	trace2_region_leave_printf("serve", sb.buf, r, "%s", msg);
+	strbuf_release(&sb);
+
+	return ret;
 }
 
 static int call_command(struct protocol_capability *command,
 			struct repository *r, struct strvec *keys,
 			struct packet_reader *request)
 {
-	return command->command(r, keys, request);
+	int ret;
+	struct strbuf sb = STRBUF_INIT;
+
+	strbuf_addf(&sb, "command/%s", command->name);
+	trace2_region_enter("serve", sb.buf, r);
+	ret = command->command(r, keys, request);
+	trace2_region_leave("serve", sb.buf, r);
+	strbuf_release(&sb);
+
+	return ret;
 }
 
 static void advertise_capabilities(void)
