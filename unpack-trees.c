@@ -2617,7 +2617,10 @@ int twoway_merge(const struct cache_entry * const *src,
 			 same(current, oldtree) && !same(current, newtree)) {
 			/* 20 or 21 */
 			return merged_entry(newtree, current, o);
-		} else
+		} else if (current && !oldtree && newtree &&
+			   S_ISSPARSEDIR(current->ce_mode) != S_ISSPARSEDIR(newtree->ce_mode))
+			return merged_entry(newtree, current, o);
+		else
 			return reject_merge(current, o);
 	}
 	else if (newtree) {
