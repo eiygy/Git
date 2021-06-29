@@ -14,6 +14,7 @@
 #include "tree.h"
 #include "commit.h"
 #include "tag.h"
+#include "oidtree.h"
 #include "alloc.h"
 
 #define BLOCKING 1024
@@ -121,6 +122,11 @@ void *alloc_commit_node(struct repository *r)
 	struct commit *c = alloc_node(r->parsed_objects->commit_state, sizeof(struct commit));
 	init_commit_node(c);
 	return c;
+}
+
+void *alloc_from_state(struct alloc_state *alloc_state, size_t n)
+{
+	return alloc_node(alloc_state, n);
 }
 
 static void report(const char *name, unsigned int count, size_t size)
