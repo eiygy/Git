@@ -2727,19 +2727,21 @@ FIND_SOURCE_FILES = ( \
 		| sed -e 's|^\./||' \
 	)
 
-$(ETAGS_TARGET): FORCE
+FOUND_SOURCE_FILES = $(shell $(FIND_SOURCE_FILES))
+
+$(ETAGS_TARGET): $(FOUND_SOURCE_FILES)
 	$(QUIET_GEN)$(RM) "$(ETAGS_TARGET)+" && \
 	$(FIND_SOURCE_FILES) | xargs etags -a -o "$(ETAGS_TARGET)+" && \
 	mv "$(ETAGS_TARGET)+" "$(ETAGS_TARGET)"
 
-tags: FORCE
+tags: $(FOUND_SOURCE_FILES)
 	$(QUIET_GEN)$(RM) tags+ && \
 	$(FIND_SOURCE_FILES) | xargs ctags -a -o tags+ && \
 	mv tags+ tags
 
-cscope.out:
+cscope.out: $(FOUND_SOURCE_FILES)
 	$(QUIET_GEN)$(RM) cscope.out && \
-	$(FIND_SOURCE_FILES) | xargs cscope -f$@ -b
+	echo $(FOUND_SOURCE_FILES) | xargs cscope -f$@ -b
 
 .PHONY: cscope
 cscope: cscope.out
@@ -2923,7 +2925,7 @@ check: config-list.h command-list.h
 		exit 1; \
 	fi
 
-FOUND_C_SOURCES = $(filter %.c,$(shell $(FIND_SOURCE_FILES)))
+FOUND_C_SOURCES = $(filter %.c,$(FOUND_SOURCE_FILES))
 COCCI_SOURCES = $(filter-out $(THIRD_PARTY_SOURCES),$(FOUND_C_SOURCES))
 
 %.cocci.patch: %.cocci $(COCCI_SOURCES)
