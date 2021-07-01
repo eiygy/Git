@@ -85,8 +85,8 @@ static struct expand_data {
 	struct object_info info;
 } oi, oi_deref;
 
-int use_filters;
-int use_textconv;
+static int use_filters;
+static int use_textconv;
 
 struct ref_to_worktree_entry {
 	struct hashmap_entry ent;
