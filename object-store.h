@@ -7,6 +7,9 @@
 #include "oid-array.h"
 #include "strbuf.h"
 #include "thread-utils.h"
+#include "khash.h"
+#include "dir.h"
+#include "oidtree.h"
 
 struct object_directory {
 	struct object_directory *next;
@@ -20,8 +23,8 @@ struct object_directory {
 	 *
 	 * Be sure to call odb_load_loose_cache() before using.
 	 */
-	char loose_objects_subdir_seen[256];
-	struct oid_array loose_objects_cache[256];
+	uint32_t loose_objects_subdir_seen[8]; /* 256 bits */
+	struct oidtree loose_objects_cache;
 
 	/*
 	 * Path to the alternative object store. If this is a relative path,
@@ -29,6 +32,19 @@ struct object_directory {
 	 */
 	char *path;
 };
+
+static inline int odb_path_eq(const char *a, const char *b)
+{
+	return !fspathcmp(a, b);
+}
+
+static inline int odb_path_hash(const char *str)
+{
+	return ignore_case ? strihash(str) : __ac_X31_hash_string(str);
+}
+
+KHASH_INIT(odb_path_map, const char * /* key: odb_path */,
+	struct object_directory *, 1, odb_path_hash, odb_path_eq);
 
 void prepare_alt_odb(struct repository *r);
 char *compute_alternate_path(const char *path, struct strbuf *err);
@@ -54,7 +70,7 @@ void add_to_alternates_memory(const char *dir);
  * Populate and return the loose object cache array corresponding to the
  * given object ID.
  */
-struct oid_array *odb_loose_cache(struct object_directory *odb,
+struct oidtree *odb_loose_cache(struct object_directory *odb,
 				  const struct object_id *oid);
 
 /* Empty the loose object cache for the specified object directory. */
@@ -116,6 +132,8 @@ struct raw_object_store {
 	 */
 	struct object_directory *odb;
 	struct object_directory **odb_tail;
+	kh_odb_path_map_t *odb_by_path;
+
 	int loaded_alternates;
 
 	/*
